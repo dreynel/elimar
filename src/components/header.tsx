@@ -24,6 +24,7 @@ export function Header() {
   const [open, setOpen] = React.useState(false);
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [userName, setUserName] = React.useState("");
+  const [userRole, setUserRole] = React.useState("");
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
   const isHomePage = pathname === '/';
@@ -38,6 +39,7 @@ export function Header() {
       try {
         const userData = JSON.parse(user);
         setUserName(userData.name || "User");
+        setUserRole(userData.role || "");
       } catch (e) {
         console.error("Failed to parse user data:", e);
       }
@@ -62,6 +64,7 @@ export function Header() {
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUserName("");
+    setUserRole("");
     setIsLoggingOut(false);
     router.push("/");
   };
@@ -120,6 +123,19 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
+              {isLoggedIn && userRole !== 'admin' && (
+                <Link
+                  href="/client/my-bookings"
+                  className={cn(
+                    "px-6 py-2.5 rounded-full transition-all duration-300 font-medium",
+                    !isScrolled && isHomePage && "text-white/80 hover:bg-white/10 hover:text-white hover:shadow-md",
+                    (isScrolled || !isHomePage) && pathname === "/client/my-bookings" && "bg-primary text-primary-foreground shadow-lg",
+                    (isScrolled || !isHomePage) && pathname !== "/client/my-bookings" && "text-foreground/80 hover:bg-primary/10 hover:text-primary hover:shadow-md"
+                  )}
+                >
+                  My Bookings
+                </Link>
+              )}
             </nav>
         </div>
 
@@ -156,6 +172,19 @@ export function Header() {
                             </Link>
                         </SheetClose>
                     ))}
+                    {isLoggedIn && userRole !== 'admin' && (
+                        <SheetClose asChild key="/client/my-bookings">
+                            <Link
+                              href="/client/my-bookings"
+                              className={cn(
+                                "transition-colors hover:text-foreground font-medium",
+                                pathname === "/client/my-bookings" ? "text-foreground" : "text-muted-foreground"
+                              )}
+                            >
+                              My Bookings
+                            </Link>
+                        </SheetClose>
+                    )}
                 </nav>
               </SheetContent>
             </Sheet>

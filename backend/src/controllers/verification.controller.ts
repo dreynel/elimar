@@ -133,12 +133,17 @@ export const resendVerificationCode = async (req: Request, res: Response) => {
     // Save to database
     await createVerificationCode(email, code, 15);
 
-    // Note: Email sending removed - implement via frontend email service if needed
+    // Send verification code email
+    console.log(`📧 Resending verification code to ${email}...`);
+    await sendVerificationCodeEmail({
+      to: email,
+      name: user.name,
+      code: code,
+    });
 
     return res.status(200).json({
       success: true,
-      message: 'Verification code generated successfully',
-      code, // In production, don't return code - only for development
+      message: 'Verification code sent to your email',
     });
   } catch (error) {
     console.error('Error resending verification code:', error);

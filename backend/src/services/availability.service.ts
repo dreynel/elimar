@@ -573,6 +573,13 @@ export const getUnavailableDates = async (
   
   // If accommodation is specified, also check regular bookings and walk-ins with time slots
   if (accommodationId) {
+    // Get accommodation type for slot blocking logic
+    const [accRows] = await pool.query<RowDataPacket[]>(
+      'SELECT type FROM accommodations WHERE id = ?',
+      [accommodationId]
+    );
+    const accommodationType = (accRows.length > 0 ? accRows[0].type : 'room') as 'cottage' | 'room';
+
     let bookingQuery = `
       SELECT check_in_date, time_slot
       FROM bookings
@@ -640,7 +647,7 @@ export const getUnavailableDates = async (
       
       // Remove slots blocked by existing bookings
       slots.forEach(bookedSlot => {
-        const blocked = getBlockedSlots(bookedSlot);
+        const blocked = getBlockedSlots(bookedSlot, accommodationType);
         availableSlots = availableSlots.filter(s => !blocked.includes(s));
       });
       

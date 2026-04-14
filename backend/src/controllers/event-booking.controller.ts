@@ -364,7 +364,7 @@ export const checkOutEventBooking = async (req: Request, res: Response) => {
         clientName: user.name,
         bookingDetails: {
           accommodationName: `Event: ${updatedBooking.event_type.replace('_', ' ').toUpperCase()}`,
-          checkInDate: updatedBooking.booking_date,
+          checkInDate: updatedBooking.booking_date instanceof Date ? updatedBooking.booking_date.toISOString().split('T')[0] : String(updatedBooking.booking_date),
           amountPaid: updatedBooking.total_price,
         },
       });

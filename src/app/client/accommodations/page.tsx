@@ -7,9 +7,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, AlertCircle, Home, Sparkles, Check } from 'lucide-react'
+import { Loader2, AlertCircle, Home, Sparkles, Check, Star } from 'lucide-react'
 import BookingModal from '@/components/BookingModal'
 import EventBookingModal from '@/components/EventBookingModal'
+import ReviewsModal from '@/components/ReviewsModal'
 import { API_URL } from '@/lib/utils';
 
 interface Accommodation {
@@ -75,6 +76,25 @@ export default function AccommodationsPage() {
 
   const AccommodationCard = ({ accommodation }: { accommodation: Accommodation }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [isReviewsOpen, setIsReviewsOpen] = useState(false);
+    const [averageRating, setAverageRating] = useState<number>(0);
+    const [reviewCount, setReviewCount] = useState<number>(0);
+    
+    const refreshRating = () => {
+      fetch(`${API_URL}/api/reviews/${accommodation.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setAverageRating(data.data.average || 0);
+            setReviewCount(data.data.total || 0);
+          }
+        })
+        .catch(err => console.error("Failed to load reviews", err));
+    };
+
+    useEffect(() => {
+      refreshRating();
+    }, [accommodation.id]);
     
     // Parse inclusions (split by newline if it's a string)
     const inclusionsList = accommodation.inclusions 
@@ -163,12 +183,24 @@ export default function AccommodationsPage() {
             </>
           )}
         </div>
-        <CardHeader className="pb-4">
+        <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="text-xl font-bold">{accommodation.name}</CardTitle>
             <Badge variant="secondary" className="shrink-0">{accommodation.capacity}</Badge>
           </div>
-          <CardDescription className="line-clamp-2 text-base">{accommodation.description}</CardDescription>
+          
+          <div 
+            className="flex items-center gap-1 mt-1 font-medium text-sm text-muted-foreground hover:text-primary cursor-pointer transition-colors"
+            onClick={() => setIsReviewsOpen(true)}
+          >
+            <Star className={`w-4 h-4 ${averageRating > 0 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
+            <span className={averageRating > 0 ? "text-foreground" : ""}>
+              {averageRating > 0 ? averageRating.toFixed(1) : "New"}
+            </span>
+            <span>({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
+          </div>
+
+          <CardDescription className="line-clamp-2 text-base mt-2">{accommodation.description}</CardDescription>
         </CardHeader>
         <CardContent className="pb-4 flex-1">
           <div className="space-y-3">
@@ -194,15 +226,32 @@ export default function AccommodationsPage() {
             )}
           </div>
         </CardContent>
-        <CardFooter className="mt-auto">
+        <CardFooter className="mt-auto flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => setIsReviewsOpen(true)} 
+            className="w-1/3 h-11 border-primary/50 text-primary hover:bg-primary/5 font-semibold"
+          >
+            Reviews
+          </Button>
           <Button 
             onClick={() => handleViewDetails(accommodation)} 
-            className="w-full h-11 text-base font-semibold"
+            className="w-2/3 h-11 text-base font-semibold transition-transform active:scale-95"
             size="lg"
           >
             Book Now
           </Button>
         </CardFooter>
+
+        <ReviewsModal 
+          isOpen={isReviewsOpen} 
+          onClose={() => {
+            setIsReviewsOpen(false);
+            refreshRating();
+          }} 
+          accommodationId={accommodation.id} 
+          accommodationName={accommodation.name} 
+        />
       </Card>
     );
   };

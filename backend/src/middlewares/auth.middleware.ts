@@ -68,7 +68,7 @@ export const requireVerifiedEmail = (req: Request, res: Response, next: NextFunc
   }
 
   // Regular users must have verified email
-  if (!req.user.email_verified) {
+  if (!(req.user as any).email_verified) {
     return res.status(403).json({
       success: false,
       message: 'Email verification required',

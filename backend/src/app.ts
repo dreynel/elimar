@@ -15,6 +15,7 @@ import walkInRoutes from './routes/walk-in.routes.js';
 import reportRoutes from './routes/report.routes.js';
 import timeSettingsRoutes from './routes/time-settings.routes.js';
 import paymentSettingsRoutes from './routes/payment-settings.routes.js';
+import reviewRoutes from './routes/review.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,7 +25,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:9002'],
+  origin: ['http://localhost:3000', 'http://localhost:9002', 'http://127.0.0.1:3000', 'http://127.0.0.1:9002'],
   credentials: true,
 }));
 app.use(express.json());
@@ -47,6 +48,7 @@ app.use('/api/walk_in', walkInRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/time-settings', timeSettingsRoutes);
 app.use('/api/payment-settings', paymentSettingsRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // API root endpoint
 app.get('/api', (req, res) => {
@@ -66,6 +68,7 @@ app.get('/api', (req, res) => {
       pricing: '/api/pricing',
       walkIn: '/api/walk_in',
       reports: '/api/reports',
+      reviews: '/api/reviews',
       health: '/api/health',
     },
   });

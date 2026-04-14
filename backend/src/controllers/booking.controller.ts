@@ -336,7 +336,7 @@ export const approveBooking = async (req: Request, res: Response) => {
 
     // Auto-reject each conflicting booking and send refund notification
     for (const conflictBooking of conflicting) {
-      await updateBooking(conflictBooking.id, { status: 'rejected' });
+      await updateBooking(Number(conflictBooking.id), { status: 'rejected' as any });
       rejectedCount++;
 
       // Send auto-rejection email with refund notice

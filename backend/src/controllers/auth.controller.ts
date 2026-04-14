@@ -29,10 +29,17 @@ export const register = async (req: Request, res: Response) => {
       role: 'user',
     });
 
-    // Generate verification code (email sending can be implemented via frontend service)
+    // Generate verification code
     const verificationCode = generateVerificationCode();
     await createVerificationCode(email, verificationCode, 15);
-    // Note: Email sending removed from backend - implement via frontend if needed
+    
+    // Send verification code email
+    console.log(`📧 Sending verification code to ${email} (signup)...`);
+    await sendVerificationCodeEmail({
+      to: email,
+      name: name,
+      code: verificationCode,
+    });
 
     res.status(201).json(
       successResponse(

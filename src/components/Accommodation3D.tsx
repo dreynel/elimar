@@ -30,10 +30,11 @@ export default function Accommodation3D({
   const controlsRef = useRef<OrbitControls | null>(null);
   const sphereRef = useRef<THREE.Mesh | null>(null);
   const textureRef = useRef<THREE.Texture | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
-  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const animationFrameRef = useRef<number>(null);
+  const resizeObserverRef = useRef<ResizeObserver>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [webglAvailable, setWebglAvailable] = useState<boolean | null>(null);
 
   // Cleanup function
   const cleanup = () => {
@@ -113,6 +114,18 @@ export default function Accommodation3D({
       width: container.clientWidth,
       height: container.clientHeight,
     });
+
+    // Check for WebGL availability
+    const canvasCheck = document.createElement('canvas');
+    const gl = canvasCheck.getContext('webgl') || canvasCheck.getContext('experimental-webgl');
+    
+    if (!gl) {
+      console.error('[Accommodation3D] WebGL not supported');
+      setWebglAvailable(false);
+      setIsLoading(false);
+      return false;
+    }
+    setWebglAvailable(true);
 
     // Create renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -404,12 +417,18 @@ export default function Accommodation3D({
       )}
 
       {/* Error fallback */}
-      {loadError && !isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
-          <div className="flex flex-col items-center gap-4 p-8 text-center">
+      {(loadError || webglAvailable === false) && !isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 px-6 text-center">
+          <div className="flex flex-col items-center gap-4 p-8 text-center max-w-md">
             <div className="text-6xl">⚠️</div>
-            <p className="text-white text-lg font-semibold">Failed to Load Panorama</p>
-            <p className="text-neutral-400 text-sm max-w-md">{loadError}</p>
+            <p className="text-white text-lg font-semibold">
+              {webglAvailable === false ? 'WebGL Unavailable' : 'Failed to Load Panorama'}
+            </p>
+            <p className="text-neutral-400 text-sm">
+              {webglAvailable === false 
+                ? "Your browser doesn't support WebGL, which is required for the 3D view. Try enabling hardware acceleration."
+                : loadError}
+            </p>
           </div>
         </div>
       )}

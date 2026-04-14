@@ -26,14 +26,14 @@ export const sendEmail = async (options: {
     console.log(`📨 Sending email via Brevo to ${options.to}...`);
     console.log(`📧 Sender: ${options.from?.email || env.EMAIL_FROM} (${options.from?.name || env.EMAIL_FROM_NAME})`);
     console.log(`📝 Subject: ${options.subject}`);
-    
+
     const sendSmtpEmail = new brevo.SendSmtpEmail();
     sendSmtpEmail.sender = options.from || { email: env.EMAIL_FROM, name: env.EMAIL_FROM_NAME };
     sendSmtpEmail.to = [{ email: options.to }];
     sendSmtpEmail.subject = options.subject;
     sendSmtpEmail.htmlContent = options.html;
 
-    const result = await brevoClient.sendTransacEmail(sendSmtpEmail);
+    const result = await brevoClient.sendTransacEmail(sendSmtpEmail) as any;
     console.log(`✅ Email sent successfully via Brevo.`);
     console.log(`📬 Message ID:`, result?.messageId || 'No message ID returned');
     console.log(`📋 Full response:`, JSON.stringify(result, null, 2));
@@ -59,12 +59,12 @@ export const verifyEmailConfig = async () => {
       console.error('❌ BREVO_API_KEY not configured in .env file');
       return false;
     }
-    
+
     if (!env.EMAIL_FROM) {
       console.error('❌ EMAIL_FROM not configured in .env file');
       return false;
     }
-    
+
     if (!brevoClient) {
       console.error('❌ Brevo API client not initialized');
       console.log('\n📧 Email Configuration Issue:');
@@ -72,7 +72,7 @@ export const verifyEmailConfig = async () => {
       console.log('   2. Get your API key from: https://app.brevo.com/settings/keys/api');
       return false;
     }
-    
+
     console.log('✅ Email service ready (Brevo API)');
     console.log(`📧 Sender email: ${env.EMAIL_FROM}`);
     console.log(`📧 Sender name: ${env.EMAIL_FROM_NAME}`);
