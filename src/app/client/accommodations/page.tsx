@@ -12,6 +12,7 @@ import BookingModal from '@/components/BookingModal'
 import EventBookingModal from '@/components/EventBookingModal'
 import ReviewsModal from '@/components/ReviewsModal'
 import { API_URL } from '@/lib/utils';
+import { FALLBACK_ACCOMMODATIONS } from '@/lib/accommodations-fallback'
 
 interface Accommodation {
   id: number;
@@ -32,6 +33,7 @@ export default function AccommodationsPage() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUsingFallbackData, setIsUsingFallbackData] = useState(false);
 
   useEffect(() => {
     fetchAccommodations();
@@ -41,7 +43,10 @@ export default function AccommodationsPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_URL}/api/accommodations`);
+      setIsUsingFallbackData(false);
+      const response = await fetch('/api/accommodations', {
+        cache: 'no-store',
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch accommodations');
@@ -49,8 +54,16 @@ export default function AccommodationsPage() {
 
       const data = await response.json();
       setAccommodations(data.data || []);
+      setIsUsingFallbackData(Boolean(data.meta?.usingFallback));
+      setError(data.meta?.error || null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load accommodations');
+      setAccommodations(FALLBACK_ACCOMMODATIONS);
+      setIsUsingFallbackData(true);
+      setError(
+        err instanceof Error
+          ? `${err.message}. Showing the local accommodations catalog while the reservation service is unavailable.`
+          : 'Showing the local accommodations catalog while the reservation service is unavailable.'
+      );
     } finally {
       setLoading(false);
     }
@@ -67,6 +80,7 @@ export default function AccommodationsPage() {
   }
 
   const handleOpenEventModal = () => {
+    if (isUsingFallbackData) return
     setIsEventModalOpen(true)
   }
 
@@ -81,6 +95,12 @@ export default function AccommodationsPage() {
     const [reviewCount, setReviewCount] = useState<number>(0);
     
     const refreshRating = () => {
+      if (isUsingFallbackData) {
+        setAverageRating(0);
+        setReviewCount(0);
+        return;
+      }
+
       fetch(`${API_URL}/api/reviews/${accommodation.id}`)
         .then(res => res.json())
         .then(data => {
@@ -94,7 +114,7 @@ export default function AccommodationsPage() {
 
     useEffect(() => {
       refreshRating();
-    }, [accommodation.id]);
+    }, [accommodation.id, isUsingFallbackData]);
     
     // Parse inclusions (split by newline if it's a string)
     const inclusionsList = accommodation.inclusions 
@@ -112,7 +132,11 @@ export default function AccommodationsPage() {
         const parsedImages = JSON.parse(accommodation.image_url);
         if (Array.isArray(parsedImages) && parsedImages.length > 0) {
           imageUrls = parsedImages.map(img => 
-            img.startsWith('http') ? img : `${API_URL}${img}`
+            img.startsWith('http')
+              ? img
+              : img.startsWith('/uploads/')
+                ? `${API_URL}${img}`
+                : img
           );
         } else {
           throw new Error('Not an array');
@@ -123,7 +147,9 @@ export default function AccommodationsPage() {
       if (accommodation.image_url) {
         const singleImage = accommodation.image_url.startsWith('http') 
           ? accommodation.image_url 
-          : `${API_URL}${accommodation.image_url}`;
+          : accommodation.image_url.startsWith('/uploads/')
+            ? `${API_URL}${accommodation.image_url}`
+            : accommodation.image_url;
         imageUrls = [singleImage];
       }
     }
@@ -190,8 +216,16 @@ export default function AccommodationsPage() {
           </div>
           
           <div 
-            className="flex items-center gap-1 mt-1 font-medium text-sm text-muted-foreground hover:text-primary cursor-pointer transition-colors"
-            onClick={() => setIsReviewsOpen(true)}
+            className={`flex items-center gap-1 mt-1 font-medium text-sm transition-colors ${
+              isUsingFallbackData
+                ? 'text-muted-foreground/70 cursor-not-allowed'
+                : 'text-muted-foreground hover:text-primary cursor-pointer'
+            }`}
+            onClick={() => {
+              if (!isUsingFallbackData) {
+                setIsReviewsOpen(true)
+              }
+            }}
           >
             <Star className={`w-4 h-4 ${averageRating > 0 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
             <span className={averageRating > 0 ? "text-foreground" : ""}>
@@ -229,13 +263,15 @@ export default function AccommodationsPage() {
         <CardFooter className="mt-auto flex gap-2">
           <Button 
             variant="outline"
-            onClick={() => setIsReviewsOpen(true)} 
+            onClick={() => setIsReviewsOpen(true)}
+            disabled={isUsingFallbackData}
             className="w-1/3 h-11 border-primary/50 text-primary hover:bg-primary/5 font-semibold"
           >
             Reviews
           </Button>
           <Button 
             onClick={() => handleViewDetails(accommodation)} 
+            disabled={isUsingFallbackData}
             className="w-2/3 h-11 text-base font-semibold transition-transform active:scale-95"
             size="lg"
           >
@@ -272,20 +308,6 @@ export default function AccommodationsPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen pt-24 pb-16">
-        <div className="page-container-wide">
-          <div className="flex flex-col items-center justify-center h-96 gap-4">
-            <AlertCircle className="w-16 h-16 text-destructive" />
-            <p className="text-xl text-muted-foreground">{error}</p>
-            <Button onClick={fetchAccommodations}>Try Again</Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="page-container-wide">
@@ -298,10 +320,32 @@ export default function AccommodationsPage() {
           </p>
         </div>
 
+      {error && (
+        <div className="mb-8 rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 text-amber-900 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-semibold">Live resort data is temporarily unavailable.</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            </div>
+            <Button
+              onClick={fetchAccommodations}
+              variant="outline"
+              className="border-amber-400 bg-white text-amber-900 hover:bg-amber-100"
+            >
+              Retry live data
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Book for an Event Button */}
       <div className="mb-8 flex justify-center">
         <Button 
           onClick={handleOpenEventModal}
+          disabled={isUsingFallbackData}
           size="lg"
           className="h-14 px-8 text-lg font-bold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all"
         >
