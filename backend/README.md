@@ -158,6 +158,25 @@ For Gmail:
 - Keep .env file secure and never commit it
 - Use environment-specific configurations
 
+## Production Database Config
+
+Preferred production setup:
+
+```env
+DATABASE_URL=mysql://USER:PASSWORD@HOST:3306/DATABASE
+DB_SSL=true
+```
+
+Alternative split variables:
+
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=resort_db
+DB_PORT=3306
+```
+
 ## Error Handling
 
 All endpoints return consistent error responses:

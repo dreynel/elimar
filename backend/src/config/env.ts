@@ -2,6 +2,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const nodeEnv = process.env.NODE_ENV || 'development';
+const databaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL || '';
+
 const defaultClientOrigins = [
   'http://localhost:3000',
   'http://localhost:9002',
@@ -20,13 +23,15 @@ const configuredClientOrigins = (
   .filter(Boolean);
 
 export const env = {
-  NODE_ENV: process.env.NODE_ENV || 'development',
+  NODE_ENV: nodeEnv,
   PORT: parseInt(process.env.PORT || '5000', 10),
-  DB_HOST: process.env.DB_HOST || 'localhost',
+  DATABASE_URL: databaseUrl || undefined,
+  DB_HOST: process.env.DB_HOST || (nodeEnv === 'production' ? '' : 'localhost'),
   DB_USER: process.env.DB_USER || 'root',
   DB_PASSWORD: process.env.DB_PASSWORD || '',
   DB_NAME: process.env.DB_NAME || 'resort_db',
   DB_PORT: parseInt(process.env.DB_PORT || '3306', 10),
+  DB_SSL: process.env.DB_SSL !== 'false',
   EMAIL_HOST: process.env.EMAIL_HOST || 'smtp.gmail.com',
   EMAIL_PORT: parseInt(process.env.EMAIL_PORT || '587', 10),
   EMAIL_USER: process.env.EMAIL_USER || '',

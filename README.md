@@ -17,3 +17,9 @@ Root commands:
 - `npm run dev:frontend` starts only the frontend
 - `npm run dev:backend` starts only the backend
 - `npm run build` builds both apps
+
+Render deployment:
+
+- `render.yaml` defines the npm-based monorepo setup for `frontend/` and `backend/`
+- backend supports a single `DATABASE_URL` env var in production
+- frontend should set `NEXT_PUBLIC_API_URL` to the deployed backend URL
