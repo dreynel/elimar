@@ -109,8 +109,6 @@ export default function BookingsPage() {
         return;
       }
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      
       // Fetch both regular bookings and event bookings
       const [regularResponse, eventResponse] = await Promise.all([
         fetch(`${API_URL}/api/bookings`, {

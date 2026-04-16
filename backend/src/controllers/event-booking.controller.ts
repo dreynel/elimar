@@ -12,6 +12,7 @@ import {
 import { findUserById } from '../models/user.model.js';
 import { checkEventBookingAvailability } from '../services/availability.service.js';
 import { sendCheckOutThankYouEmail, sendBookingNotificationEmail, sendAutoRejectionWithRefundEmail } from '../services/email.service.js';
+import { getFloat, getInt, getString } from '../utils/request.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
 export const getEventBookings = async (req: Request, res: Response) => {
@@ -33,7 +34,7 @@ export const getEventBookings = async (req: Request, res: Response) => {
 
 export const getEventBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const booking = await getEventBookingById(id);
 
     if (!booking) {
@@ -75,7 +76,7 @@ export const addEventBooking = async (req: Request, res: Response) => {
 
     // Check for conflicts using the comprehensive availability service
     const availabilityResult = await checkEventBookingAvailability(
-      booking_date,
+      getString(booking_date),
       event_type as 'whole_day' | 'morning' | 'evening'
     );
     
@@ -93,7 +94,7 @@ export const addEventBooking = async (req: Request, res: Response) => {
       event_type,
       booking_date,
       event_details,
-      total_price: parseFloat(total_price),
+      total_price: getFloat(total_price),
       proof_of_payment_url,
     });
 
@@ -106,7 +107,7 @@ export const addEventBooking = async (req: Request, res: Response) => {
 
 export const modifyEventBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const { status, event_details } = req.body;
 
     // Get uploaded file path if exists
@@ -147,7 +148,7 @@ export const modifyEventBooking = async (req: Request, res: Response) => {
 
 export const cancelEventBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const booking = await getEventBookingById(id);
 
     if (!booking) {
@@ -173,7 +174,7 @@ export const cancelEventBooking = async (req: Request, res: Response) => {
 
 export const approveEventBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
 
     // Only admin can approve
     if (req.user!.role !== 'admin') {
@@ -291,7 +292,7 @@ export const approveEventBooking = async (req: Request, res: Response) => {
 
 export const rejectEventBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
 
     // Only admin can reject
     if (req.user!.role !== 'admin') {
@@ -331,7 +332,7 @@ export const rejectEventBooking = async (req: Request, res: Response) => {
 
 export const checkOutEventBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
 
     // Only admin can check out
     if (req.user!.role !== 'admin') {
@@ -380,7 +381,7 @@ export const checkOutEventBooking = async (req: Request, res: Response) => {
 // Delete event booking (admin only)
 export const deleteEventBookingById = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
 
     if (req.user!.role !== 'admin') {
       return res.status(403).json(errorResponse('Only admin can delete bookings', 403));

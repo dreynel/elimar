@@ -215,8 +215,6 @@ export default function EventBookingModal({ isOpen, onClose }: EventBookingModal
     setIsSubmitting(true);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9002';
-      
       // Create FormData for file upload
       const formData = new FormData();
       formData.append('event_type', selectedEvent);

@@ -16,6 +16,7 @@ import reportRoutes from './routes/report.routes.js';
 import timeSettingsRoutes from './routes/time-settings.routes.js';
 import paymentSettingsRoutes from './routes/payment-settings.routes.js';
 import reviewRoutes from './routes/review.routes.js';
+import { env } from './config/env.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,7 +26,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:9002', 'http://127.0.0.1:3000', 'http://127.0.0.1:9002'],
+  origin: env.CLIENT_URLS,
   credentials: true,
 }));
 app.use(express.json());

@@ -6,6 +6,7 @@ import {
   updateAccommodation,
   deleteAccommodation,
 } from '../models/accommodation.model.js';
+import { getFloat, getInt, getString } from '../utils/request.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
 export const getAccommodations = async (req: Request, res: Response) => {
@@ -20,7 +21,7 @@ export const getAccommodations = async (req: Request, res: Response) => {
 
 export const getAccommodation = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const accommodation = await getAccommodationById(id);
 
     if (!accommodation) {
@@ -63,8 +64,8 @@ export const addAccommodation = async (req: Request, res: Response) => {
       type,
       capacity,
       description,
-      price: parseFloat(price),
-      add_price: add_price ? parseFloat(add_price) : undefined,
+      price: getFloat(price),
+      add_price: add_price ? getFloat(add_price) : undefined,
       inclusions,
       image_url: imageUrl,
       panoramic_url: panoramicUrl,
@@ -79,14 +80,14 @@ export const addAccommodation = async (req: Request, res: Response) => {
 
 export const modifyAccommodation = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const updates: any = {};
 
     // Get text fields from body
     if (req.body.name) updates.name = req.body.name;
-    if (req.body.price) updates.price = parseFloat(req.body.price);
+    if (req.body.price) updates.price = getFloat(req.body.price);
     if (req.body.add_price !== undefined) {
-      updates.add_price = req.body.add_price ? parseFloat(req.body.add_price) : null;
+      updates.add_price = req.body.add_price ? getFloat(req.body.add_price) : null;
     }
     if (req.body.description) updates.description = req.body.description;
     if (req.body.capacity) updates.capacity = req.body.capacity;
@@ -115,7 +116,7 @@ export const modifyAccommodation = async (req: Request, res: Response) => {
     // Remove images by index if specified
     if (req.body.removedImageIndices) {
       try {
-        const removedIndices: number[] = JSON.parse(req.body.removedImageIndices);
+        const removedIndices: number[] = JSON.parse(getString(req.body.removedImageIndices));
         existingImages = existingImages.filter((_, idx) => !removedIndices.includes(idx));
       } catch (e) {
         console.error('Error parsing removedImageIndices:', e);
@@ -153,7 +154,7 @@ export const modifyAccommodation = async (req: Request, res: Response) => {
 
 export const removeAccommodation = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const success = await deleteAccommodation(id);
 
     if (!success) {
@@ -169,7 +170,7 @@ export const removeAccommodation = async (req: Request, res: Response) => {
 
 export const updateAccommodationAvailability = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const { supports_morning, supports_night, supports_whole_day } = req.body;
 
     // Get current accommodation to check type

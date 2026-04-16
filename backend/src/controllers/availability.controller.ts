@@ -9,6 +9,7 @@ import {
   getAvailableAccommodations,
   TimeSlotType,
 } from '../services/availability.service.js';
+import { getInt, getOptionalString, getString } from '../utils/request.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
 /**
@@ -36,8 +37,8 @@ export const checkRegularAvailability = async (req: Request, res: Response) => {
     }
 
     const result = await checkRegularBookingAvailability(
-      parseInt(accommodation_id as string),
-      check_in_date as string,
+      getInt(accommodation_id),
+      getString(check_in_date),
       slot
     );
 
@@ -63,9 +64,9 @@ export const getAvailableSlots = async (req: Request, res: Response) => {
     }
 
     const slots = await getAvailableSlotsForAccommodation(
-      parseInt(accommodation_id as string),
-      date as string,
-      exclude_booking_id ? parseInt(exclude_booking_id as string) : undefined
+      getInt(accommodation_id),
+      getString(date),
+      exclude_booking_id ? getInt(exclude_booking_id) : undefined
     );
 
     res.json(successResponse({ availableSlots: slots }));
@@ -96,7 +97,7 @@ export const checkEventAvailability = async (req: Request, res: Response) => {
     }
 
     const result = await checkEventBookingAvailability(
-      booking_date as string,
+      getString(booking_date),
       event_type as 'whole_day' | 'morning' | 'evening'
     );
 
@@ -116,9 +117,9 @@ export const getUnavailableDatesList = async (req: Request, res: Response) => {
     const { accommodation_id, start_date, end_date } = req.query;
 
     const result = await getUnavailableDates(
-      accommodation_id ? parseInt(accommodation_id as string) : undefined,
-      start_date as string | undefined,
-      end_date as string | undefined
+      accommodation_id ? getInt(accommodation_id) : undefined,
+      getOptionalString(start_date),
+      getOptionalString(end_date)
     );
 
     res.json(successResponse(result));
@@ -140,7 +141,7 @@ export const getDateSummary = async (req: Request, res: Response) => {
       return res.status(400).json(errorResponse('date parameter is required', 400));
     }
 
-    const summary = await getDateBookingSummary(date);
+    const summary = await getDateBookingSummary(getString(date));
 
     res.json(successResponse(summary));
   } catch (error: any) {
@@ -161,7 +162,7 @@ export const getEventConflicts = async (req: Request, res: Response) => {
       return res.status(400).json(errorResponse('date parameter is required', 400));
     }
 
-    const conflicts = await checkEventConflictsForDate(date);
+    const conflicts = await checkEventConflictsForDate(getString(date));
 
     res.json(successResponse(conflicts));
   } catch (error: any) {
@@ -202,7 +203,7 @@ export const getAvailableAccommodationsController = async (req: Request, res: Re
     }
 
     const availableIds = await getAvailableAccommodations(
-      date as string,
+      getString(date),
       slot,
       accommodation_type as 'cottage' | 'room'
     );

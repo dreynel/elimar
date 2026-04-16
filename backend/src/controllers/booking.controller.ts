@@ -13,6 +13,7 @@ import { getAccommodationById, updateAccommodationStatus } from '../models/accom
 import { findUserById } from '../models/user.model.js';
 import { sendBookingConfirmation, sendBookingNotificationEmail, sendCheckOutThankYouEmail, sendAutoRejectionWithRefundEmail } from '../services/email.service.js';
 import { checkRegularBookingAvailability, TimeSlotType, TIME_SLOTS } from '../services/availability.service.js';
+import { getFloat, getFloatOr, getInt, getIntOr, getString } from '../utils/request.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
 export const getBookings = async (req: Request, res: Response) => {
@@ -34,7 +35,7 @@ export const getBookings = async (req: Request, res: Response) => {
 
 export const getBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const booking = await getBookingById(id);
 
     if (!booking) {
@@ -94,7 +95,7 @@ export const addBooking = async (req: Request, res: Response) => {
       selectedSlot = time_slot;
     } else if (booking_time) {
       // Legacy: Convert booking_time to time_slot
-      const hour = parseInt(booking_time.split(':')[0]);
+      const hour = getInt(booking_time.split(':')[0]);
       if (hour >= 17) {
         selectedSlot = 'night';
       } else {
@@ -145,17 +146,17 @@ export const addBooking = async (req: Request, res: Response) => {
       time_slot: selectedSlot,
       booking_time: booking_time || TIME_SLOTS[selectedSlot].start + ':00',
       check_out_date,
-      adults: parseInt(adults) || 0,
-      kids: parseInt(kids) || 0,
-      pwd: parseInt(pwd) || 0,
-      senior: parseInt(senior) || 0,
-      adult_swimming: parseInt(adult_swimming) || 0,
-      kid_swimming: parseInt(kid_swimming) || 0,
-      pwd_swimming: parseInt(pwd_swimming) || 0,
-      senior_swimming: parseInt(senior_swimming) || 0,
+      adults: getIntOr(adults, 0),
+      kids: getIntOr(kids, 0),
+      pwd: getIntOr(pwd, 0),
+      senior: getIntOr(senior, 0),
+      adult_swimming: getIntOr(adult_swimming, 0),
+      kid_swimming: getIntOr(kid_swimming, 0),
+      pwd_swimming: getIntOr(pwd_swimming, 0),
+      senior_swimming: getIntOr(senior_swimming, 0),
       overnight_stay: overnight_stay === 'true' || overnight_stay === true,
       overnight_swimming: overnight_swimming === 'true' || overnight_swimming === true,
-      total_price: parseFloat(total_price),
+      total_price: getFloat(total_price),
       proof_of_payment_url,
     });
 
@@ -171,10 +172,10 @@ export const addBooking = async (req: Request, res: Response) => {
         accommodationName: accommodation.name,
         checkInDate: check_in_date,
         checkOutDate: check_out_date,
-        adults: parseInt(adults) || 0,
-        kids: parseInt(kids) || 0,
-        pwd: parseInt(pwd) || 0,
-        totalAmount: parseFloat(total_price),
+        adults: getIntOr(adults, 0),
+        kids: getIntOr(kids, 0),
+        pwd: getIntOr(pwd, 0),
+        totalAmount: getFloat(total_price),
         bookingId,
       });
     }
@@ -188,7 +189,7 @@ export const addBooking = async (req: Request, res: Response) => {
 
 export const modifyBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const { status, guest_names } = req.body;
 
     // Get uploaded file path if exists
@@ -246,7 +247,7 @@ export const modifyBooking = async (req: Request, res: Response) => {
 
 export const cancelBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const booking = await getBookingById(id);
 
     if (!booking) {
@@ -273,7 +274,7 @@ export const cancelBooking = async (req: Request, res: Response) => {
 // Approve booking (admin only)
 export const approveBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
 
     if (req.user!.role !== 'admin') {
       return res.status(403).json(errorResponse('Only admin can approve bookings', 403));
@@ -387,7 +388,7 @@ export const approveBooking = async (req: Request, res: Response) => {
 // Reject booking (admin only)
 export const rejectBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
 
     if (req.user!.role !== 'admin') {
       return res.status(403).json(errorResponse('Only admin can reject bookings', 403));
@@ -432,7 +433,7 @@ export const rejectBooking = async (req: Request, res: Response) => {
 // Check out booking (admin only)
 export const checkOutBooking = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
 
     if (req.user!.role !== 'admin') {
       return res.status(403).json(errorResponse('Only admin can check out bookings', 403));
@@ -484,7 +485,7 @@ export const checkOutBooking = async (req: Request, res: Response) => {
 // Delete booking (admin only)
 export const deleteBookingById = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
 
     if (req.user!.role !== 'admin') {
       return res.status(403).json(errorResponse('Only admin can delete bookings', 403));

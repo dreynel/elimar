@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import { getReviewsByAccommodationId, createReview, getAverageRating, hasUserReviewed } from '../models/review.model.js';
+import { getInt } from '../utils/request.js';
 
 export const getReviews = async (req: Request, res: Response): Promise<void> => {
   try {
-    const accommodationId = parseInt(req.params.accommodationId);
+    const accommodationId = getInt(req.params.accommodationId);
     if (isNaN(accommodationId)) {
       res.status(400).json({ success: false, message: 'Invalid accommodation ID' });
       return;
@@ -28,7 +29,7 @@ export const getReviews = async (req: Request, res: Response): Promise<void> => 
 
 export const addReview = async (req: Request, res: Response): Promise<void> => {
   try {
-    const accommodationId = parseInt(req.params.accommodationId);
+    const accommodationId = getInt(req.params.accommodationId);
     const { rating, comment, user_id } = req.body;
 
     if (!user_id) {

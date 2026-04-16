@@ -57,6 +57,14 @@ npm run build
 npm start
 ```
 
+### Frontend URL / CORS
+Set one of these environment variables so the backend accepts requests from your frontend without editing code:
+
+- `FRONTEND_URL=https://your-frontend-domain`
+- `CLIENT_URLS=https://your-frontend-domain,https://www.your-frontend-domain`
+
+If none is set, the backend falls back to localhost development origins.
+
 ## API Endpoints
 
 ### Authentication

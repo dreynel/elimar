@@ -5,6 +5,7 @@ import {
   updateTimeSlotSetting,
   updateAllTimeSlotSettings,
 } from '../models/time-settings.model.js';
+import { getInt } from '../utils/request.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
 export const getTimeSettings = async (req: Request, res: Response) => {
@@ -94,7 +95,7 @@ export const getTimeSettingsRaw = async (req: Request, res: Response) => {
 
 export const getTimeSetting = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const setting = await getTimeSlotSettingById(id);
 
     if (!setting) {
@@ -110,7 +111,7 @@ export const getTimeSetting = async (req: Request, res: Response) => {
 
 export const modifyTimeSetting = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const updates = req.body;
 
     const success = await updateTimeSlotSetting(id, updates);

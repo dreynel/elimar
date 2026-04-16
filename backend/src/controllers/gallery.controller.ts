@@ -5,6 +5,7 @@ import {
   createGalleryImage,
   deleteGalleryImage,
 } from '../models/gallery.model.js';
+import { getInt } from '../utils/request.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
 export const getGalleryImages = async (req: Request, res: Response) => {
@@ -19,7 +20,7 @@ export const getGalleryImages = async (req: Request, res: Response) => {
 
 export const getGalleryImage = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const image = await getGalleryImageById(id);
 
     if (!image) {
@@ -60,7 +61,7 @@ export const uploadGalleryImage = async (req: Request, res: Response) => {
 
 export const removeGalleryImage = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = getInt(req.params.id);
     const success = await deleteGalleryImage(id);
 
     if (!success) {

@@ -9,6 +9,7 @@ import {
   checkOutWalkInLog,
 } from '../models/walk-in.model.js';
 import { updateAccommodationStatus } from '../models/accommodation.model.js';
+import { getInt, getString } from '../utils/request.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
 export const getWalkInLogs = async (req: Request, res: Response) => {
@@ -18,8 +19,8 @@ export const getWalkInLogs = async (req: Request, res: Response) => {
     let logs;
     if (startDate && endDate) {
       logs = await getWalkInLogsByDateRange(
-        startDate as string,
-        endDate as string
+        getString(startDate),
+        getString(endDate)
       );
     } else {
       logs = await getAllWalkInLogs();
@@ -35,7 +36,7 @@ export const getWalkInLogs = async (req: Request, res: Response) => {
 export const getWalkInLog = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const log = await getWalkInLogById(parseInt(id));
+    const log = await getWalkInLogById(getInt(id));
 
     if (!log) {
       return res.status(404).json(errorResponse('Walk-in log not found'));
@@ -80,13 +81,13 @@ export const createWalkInLogEntry = async (req: Request, res: Response) => {
 export const updateWalkInLogEntry = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const updated = await updateWalkInLog(parseInt(id), req.body);
+    const updated = await updateWalkInLog(getInt(id), req.body);
 
     if (!updated) {
       return res.status(404).json(errorResponse('Walk-in log not found or no changes made'));
     }
 
-    const updatedLog = await getWalkInLogById(parseInt(id));
+    const updatedLog = await getWalkInLogById(getInt(id));
     return res.json(successResponse(updatedLog, 'Walk-in log updated successfully'));
   } catch (err) {
     console.error('Error updating walk-in log:', err);
@@ -97,7 +98,7 @@ export const updateWalkInLogEntry = async (req: Request, res: Response) => {
 export const deleteWalkInLogEntry = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const deleted = await deleteWalkInLog(parseInt(id));
+    const deleted = await deleteWalkInLog(getInt(id));
 
     if (!deleted) {
       return res.status(404).json(errorResponse('Walk-in log not found'));
@@ -115,12 +116,12 @@ export const checkOutWalkInLogEntry = async (req: Request, res: Response) => {
     const { id } = req.params;
     
     // Get the log first to get accommodation_id
-    const log = await getWalkInLogById(parseInt(id));
+    const log = await getWalkInLogById(getInt(id));
     if (!log) {
       return res.status(404).json(errorResponse('Walk-in log not found'));
     }
 
-    const checkedOut = await checkOutWalkInLog(parseInt(id));
+    const checkedOut = await checkOutWalkInLog(getInt(id));
 
     if (!checkedOut) {
       return res.status(404).json(errorResponse('Walk-in log not found'));
@@ -131,7 +132,7 @@ export const checkOutWalkInLogEntry = async (req: Request, res: Response) => {
       await updateAccommodationStatus(log.accommodation_id, 'vacant');
     }
 
-    const updatedLog = await getWalkInLogById(parseInt(id));
+    const updatedLog = await getWalkInLogById(getInt(id));
     return res.json(successResponse(updatedLog, 'Guest checked out successfully'));
   } catch (err) {
     console.error('Error checking out walk-in log:', err);

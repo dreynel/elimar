@@ -51,8 +51,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Loader2, MoreVertical, UserCheck, X, Calendar, Eye, User, Home, MapPin, Sun, Moon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTimeSlotSettings } from '@/contexts/TimeSlotContext';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9002';
+import { API_URL } from '@/lib/utils';
 
 type TimeSlotType = 'morning' | 'night' | 'whole_day';
 

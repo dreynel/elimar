@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { findUserByEmail, createUser, getAllClients, updatePassword, updateUserEmailVerified, getUsersByRole, deleteUser } from '../models/user.model.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
 import { generateToken } from '../utils/jwt.js';
+import { getInt } from '../utils/request.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { generateVerificationCode, createVerificationCode, verifyCode, deleteVerificationCode } from '../models/verification.model.js';
 import { sendVerificationCodeEmail, sendAdminInvitationEmail, sendPasswordResetEmail } from '../services/email.service.js';
@@ -268,11 +269,11 @@ export const deleteAdmin = async (req: Request, res: Response) => {
     }
 
     // Prevent deleting self
-    if (parseInt(id) === req.user!.id) {
+    if (getInt(id) === req.user!.id) {
       return res.status(403).json(errorResponse('Cannot delete your own account', 403));
     }
 
-    await deleteUser(parseInt(id));
+    await deleteUser(getInt(id));
     res.json(successResponse(null, 'Admin deleted successfully'));
   } catch (error: any) {
     console.error('Delete admin error:', error);
