@@ -27,6 +27,7 @@
 
 # next.js
 /.next/
+/frontend/.next/
 /out/
 
 # production
@@ -54,6 +55,7 @@ lerna-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+frontend/next-env.d.ts
 
 # genkit
 .genkit/*
@@ -67,6 +69,10 @@ backend/.env*
 backend/*.env
 backend/database/*.sql.backup
 backend/database/backups/
+
+# frontend specific
+frontend/node_modules/
+frontend/.env*
 
 # firebase
 firebase-debug.log
