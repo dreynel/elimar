@@ -38,6 +38,7 @@ interface Booking {
   senior: number;
   check_in_date: string;
   accommodation_name?: string;
+  is_event?: boolean;
 }
 
 interface GuestEntry {
@@ -93,31 +94,58 @@ export default function ReportsPage() {
   const fetchClientBooking = async (clientId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/bookings`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      
+      // Fetch both regular and event bookings
+      const [regularRes, eventRes] = await Promise.all([
+        fetch(`${API_URL}/api/bookings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${API_URL}/api/event_bookings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      ]);
 
-      if (response.ok) {
-        const data = await response.json();
-        // Filter bookings by user_id
-        const userBookings = data.data.filter((b: any) => b.user_id === parseInt(clientId));
-        setClientBookings(userBookings);
-        
-        if (userBookings.length > 0) {
-          // Auto-select first booking if only one exists
-          if (userBookings.length === 1) {
-            handleBookingSelect(userBookings[0]);
-          } else {
-            // Reset selection for multiple bookings
-            setSelectedBooking(null);
-            setSelectedBookingId('');
-            setGuestEntries([]);
-          }
+      let allBookings: Booking[] = [];
+
+      if (regularRes.ok) {
+        const data = await regularRes.json();
+        const regularBookings = (data.data || [])
+          .filter((b: any) => b.user_id === parseInt(clientId))
+          .map((b: any) => ({ ...b, is_event: false }));
+        allBookings = [...allBookings, ...regularBookings];
+      }
+
+      if (eventRes.ok) {
+        const data = await eventRes.json();
+        const eventBookings = (data.data || [])
+          .filter((b: any) => b.user_id === parseInt(clientId))
+          .map((b: any) => ({
+            id: b.id,
+            check_in_date: b.booking_date,
+            accommodation_name: `Event: ${b.event_type.replace('_', ' ').toUpperCase()}`,
+            adults: 0, 
+            kids: 0,
+            pwd: 0,
+            senior: 0,
+            is_event: true
+          }));
+        allBookings = [...allBookings, ...eventBookings];
+      }
+
+      setClientBookings(allBookings);
+      
+      if (allBookings.length > 0) {
+        if (allBookings.length === 1) {
+          handleBookingSelect(allBookings[0]);
         } else {
           setSelectedBooking(null);
           setSelectedBookingId('');
           setGuestEntries([]);
         }
+      } else {
+        setSelectedBooking(null);
+        setSelectedBookingId('');
+        setGuestEntries([]);
       }
     } catch (error) {
       console.error('Error fetching booking:', error);
@@ -135,17 +163,23 @@ export default function ReportsPage() {
     
     // Initialize guest entries based on booking data
     const entries: GuestEntry[] = [];
-    for (let i = 0; i < (booking.adults || 0); i++) {
+    
+    if (booking.is_event) {
+      // For events, start with one empty entry
       entries.push({ name: '', address: '', type: 'adult' });
-    }
-    for (let i = 0; i < (booking.kids || 0); i++) {
-      entries.push({ name: '', address: '', type: 'kid' });
-    }
-    for (let i = 0; i < (booking.pwd || 0); i++) {
-      entries.push({ name: '', address: '', type: 'pwd' });
-    }
-    for (let i = 0; i < (booking.senior || 0); i++) {
-      entries.push({ name: '', address: '', type: 'senior' });
+    } else {
+      for (let i = 0; i < (booking.adults || 0); i++) {
+        entries.push({ name: '', address: '', type: 'adult' });
+      }
+      for (let i = 0; i < (booking.kids || 0); i++) {
+        entries.push({ name: '', address: '', type: 'kid' });
+      }
+      for (let i = 0; i < (booking.pwd || 0); i++) {
+        entries.push({ name: '', address: '', type: 'pwd' });
+      }
+      for (let i = 0; i < (booking.senior || 0); i++) {
+        entries.push({ name: '', address: '', type: 'senior' });
+      }
     }
     setGuestEntries(entries);
   };
@@ -221,7 +255,11 @@ export default function ReportsPage() {
       const token = localStorage.getItem('token');
       const guestNames = JSON.stringify(guestEntries);
 
-      const response = await fetch(`${API_URL}/api/bookings/${selectedBooking.id}`, {
+      const endpoint = selectedBooking.is_event 
+        ? `${API_URL}/api/event_bookings/${selectedBooking.id}`
+        : `${API_URL}/api/bookings/${selectedBooking.id}`;
+
+      const response = await fetch(endpoint, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

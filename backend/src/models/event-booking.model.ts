@@ -62,8 +62,8 @@ export const createEventBooking = async (data: EventBookingCreate): Promise<numb
   const [result] = await pool.query<ResultSetHeader>(
     `INSERT INTO event_bookings (
       user_id, event_type, booking_date, event_details, 
-      total_price, proof_of_payment_url
-    ) VALUES (?, ?, ?, ?, ?, ?)`,
+      total_price, proof_of_payment_url, guest_names
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       data.user_id,
       data.event_type,
@@ -71,6 +71,7 @@ export const createEventBooking = async (data: EventBookingCreate): Promise<numb
       data.event_details || null,
       data.total_price,
       data.proof_of_payment_url || null,
+      data.guest_names || null,
     ]
   );
   return result.insertId;

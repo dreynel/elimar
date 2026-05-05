@@ -1020,35 +1020,22 @@ export default function BookingModal({ accommodation, isOpen, onClose }: Booking
                 <Label htmlFor="booking-date" className="text-sm font-medium">
                   Select Date
                 </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={`w-full h-11 justify-start text-left font-normal ${!bookingDate && "text-muted-foreground"}`}
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {bookingDate ? format(bookingDate, "PPP") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={bookingDate}
-                      onSelect={setBookingDate}
-                      disabled={(date) => {
-                        // Disable past dates
-                        if (date < new Date(new Date().setHours(0, 0, 0, 0))) {
-                          return true
-                        }
-                        
-                        // Disable dates with whole-day events or fully booked
-                        const dateStr = date.toISOString().split('T')[0]
-                        return unavailableDates.includes(dateStr)
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  id="booking-date"
+                  type="date"
+                  min={new Date().toISOString().split('T')[0]}
+                  value={bookingDate ? `${bookingDate.getFullYear()}-${String(bookingDate.getMonth() + 1).padStart(2, '0')}-${String(bookingDate.getDate()).padStart(2, '0')}` : ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      // Parse the date string safely into local time to avoid timezone shifts
+                      const [year, month, day] = e.target.value.split('-').map(Number);
+                      setBookingDate(new Date(year, month - 1, day, 12, 0, 0, 0));
+                    } else {
+                      setBookingDate(undefined);
+                    }
+                  }}
+                  className="w-full sm:max-w-[250px] h-12 text-base px-4"
+                />
                 <p className="text-xs text-muted-foreground">
                   Choose your booking date
                 </p>

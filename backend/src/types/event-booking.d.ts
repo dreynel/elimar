@@ -7,6 +7,7 @@ export interface EventBooking {
   total_price: number;
   proof_of_payment_url: string | null;
   status: 'pending' | 'confirmed' | 'cancelled' | 'rejected' | 'approved' | 'completed';
+  guest_names: string | null;
   created_at: Date;
   updated_at: Date;
   // JOIN fields
@@ -22,10 +23,12 @@ export interface EventBookingCreate {
   event_details?: string;
   total_price: number;
   proof_of_payment_url?: string;
+  guest_names?: string;
 }
 
 export interface EventBookingUpdate {
   status?: 'pending' | 'confirmed' | 'cancelled' | 'rejected' | 'approved' | 'completed';
   proof_of_payment_url?: string;
   event_details?: string;
+  guest_names?: string;
 }

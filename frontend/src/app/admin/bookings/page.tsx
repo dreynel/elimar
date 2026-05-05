@@ -956,31 +956,37 @@ export default function BookingsPage() {
                 </div>
               </div>
 
-              {/* Guest Information - Only for regular bookings */}
-              {selectedBooking.booking_type !== 'event' && (
+              {/* Guest Information */}
+              {(selectedBooking.booking_type !== 'event' || selectedBooking.guest_names) && (
                 <div className="border rounded-lg p-4 bg-muted/30">
                   <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary" />
                     Guest Information
                   </h3>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Adults</p>
-                      <p className="font-medium text-lg">{selectedBooking.adults || 0}</p>
+                  {selectedBooking.booking_type !== 'event' ? (
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Adults</p>
+                        <p className="font-medium text-lg">{selectedBooking.adults || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Kids</p>
+                        <p className="font-medium text-lg">{selectedBooking.kids || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">PWD</p>
+                        <p className="font-medium text-lg">{selectedBooking.pwd || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Senior</p>
+                        <p className="font-medium text-lg">{selectedBooking.senior || 0}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Kids</p>
-                      <p className="font-medium text-lg">{selectedBooking.kids || 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">PWD</p>
-                      <p className="font-medium text-lg">{selectedBooking.pwd || 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Senior</p>
-                      <p className="font-medium text-lg">{selectedBooking.senior || 0}</p>
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic mb-2">
+                      Exclusive Resort Event - Guest List Below
+                    </p>
+                  )}
                   {selectedBooking.guest_names && (() => {
                     try {
                       const guests = JSON.parse(selectedBooking.guest_names);

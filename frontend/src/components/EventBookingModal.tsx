@@ -14,9 +14,7 @@ import {
 import { Button } from "./ui/button"
 import { Label } from "./ui/label"
 import { Input } from "./ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
-import { Calendar as CalendarComponent } from "./ui/calendar"
-import { Calendar, Loader2, Sparkles, Info, AlertCircle, FileText, X, QrCode } from "lucide-react"
+import { Loader2, Sparkles, Info, AlertCircle, FileText, X, QrCode, Calendar } from "lucide-react"
 import { API_URL } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useAvailability } from "@/hooks/use-availability";
@@ -373,28 +371,22 @@ export default function EventBookingModal({ isOpen, onClose }: EventBookingModal
           {/* Date Selection */}
           <div>
             <h4 className="text-lg font-bold mb-3">Select Event Date</h4>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`w-full h-12 justify-start text-left font-normal ${!bookingDate && "text-muted-foreground"}`}
-                >
-                  <Calendar className="mr-2 h-5 w-5" />
-                  {bookingDate ? format(bookingDate, "PPPP") : "Pick your event date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  mode="single"
-                  selected={bookingDate}
-                  onSelect={setBookingDate}
-                  disabled={(date) =>
-                    date < new Date(new Date().setHours(0, 0, 0, 0))
-                  }
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <Input
+              id="event-booking-date"
+              type="date"
+              min={new Date().toISOString().split('T')[0]}
+              value={bookingDate ? `${bookingDate.getFullYear()}-${String(bookingDate.getMonth() + 1).padStart(2, '0')}-${String(bookingDate.getDate()).padStart(2, '0')}` : ''}
+              onChange={(e) => {
+                if (e.target.value) {
+                  // Parse the date string safely into local time to avoid timezone shifts
+                  const [year, month, day] = e.target.value.split('-').map(Number);
+                  setBookingDate(new Date(year, month - 1, day, 12, 0, 0, 0));
+                } else {
+                  setBookingDate(undefined);
+                }
+              }}
+              className="w-full sm:max-w-[250px] h-12 text-base px-4"
+            />
             
             {/* Availability Message */}
             {checkingAvailability && (

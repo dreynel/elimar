@@ -9,15 +9,17 @@ import { format } from 'date-fns'
 
 interface Booking {
   id: number;
-  accommodation_id: number;
-  accommodation_name: string;
+  accommodation_id?: number;
+  accommodation_name?: string;
+  event_type?: string;
   check_in_date: string;
   check_out_date: string | null;
   time_slot: string;
   booking_time: string;
-  total_price: string;
-  status: 'pending' | 'approved' | 'cancelled' | 'rejected' | 'completed';
+  total_price: string | number;
+  status: string;
   created_at: string;
+  is_event?: boolean;
 }
 
 export default function MyBookingsPage() {
@@ -38,18 +40,42 @@ export default function MyBookingsPage() {
         throw new Error('Please log in to view your bookings');
       }
 
-      const response = await fetch(`${API_URL}/api/bookings`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Fetch both regular and event bookings
+      const [bookingsRes, eventBookingsRes] = await Promise.all([
+        fetch(`${API_URL}/api/bookings`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${API_URL}/api/event_bookings`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch bookings');
+      let regularData = [];
+      let eventData = [];
+
+      if (bookingsRes.ok) {
+        const data = await bookingsRes.json();
+        regularData = data.data || [];
       }
 
-      const data = await response.json();
-      setBookings(data.data || []);
+      if (eventBookingsRes.ok) {
+        const data = await eventBookingsRes.json();
+        eventData = (data.data || []).map((eb: any) => ({
+          ...eb,
+          accommodation_name: `Entire Resort (${eb.event_type.replace('_', ' ').toUpperCase()})`,
+          check_in_date: eb.booking_date,
+          check_out_date: eb.booking_date,
+          time_slot: eb.event_type,
+          is_event: true
+        }));
+      }
+
+      // Merge and sort by created_at descending
+      const combinedBookings = [...regularData, ...eventData].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setBookings(combinedBookings);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred fetching your booking history');
     } finally {
@@ -68,7 +94,15 @@ export default function MyBookingsPage() {
     }
   };
 
-  const getTimeSlotLabel = (slot: string) => {
+  const getTimeSlotLabel = (slot: string, isEvent?: boolean) => {
+    if (isEvent) {
+      switch(slot) {
+        case 'morning': return 'Morning (9:00 AM - 5:00 PM)';
+        case 'evening': return 'Evening (5:30 PM - 10:00 PM)';
+        case 'whole_day': return 'Whole Day (9:00 AM - 5:00 PM)';
+        default: return slot.replace('_', ' ').toUpperCase();
+      }
+    }
     switch(slot) {
       case 'morning': return 'Morning (9 AM - 5 PM)';
       case 'night': return 'Night (5:30 PM - 8 AM)';
@@ -132,7 +166,9 @@ export default function MyBookingsPage() {
                   <div className="flex items-start gap-3">
                     <Calendar className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Check In</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {booking.is_event ? 'Event Date' : 'Check In'}
+                      </p>
                       <p className="font-semibold">{format(new Date(booking.check_in_date), 'MMMM d, yyyy')}</p>
                       {booking.check_out_date && booking.check_out_date !== booking.check_in_date && (
                         <p className="text-sm text-muted-foreground mt-1">
@@ -146,7 +182,7 @@ export default function MyBookingsPage() {
                     <Clock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Time Slot</p>
-                      <p className="font-semibold">{getTimeSlotLabel(booking.time_slot)}</p>
+                      <p className="font-semibold">{getTimeSlotLabel(booking.time_slot, booking.is_event)}</p>
                     </div>
                   </div>
                   
